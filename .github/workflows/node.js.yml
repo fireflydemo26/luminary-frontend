@@ -104,10 +104,6 @@ jobs:
         id: jmwe
         env:
           JMWE_WEBHOOK_URL: ${{ secrets.JMWE_WEBHOOK_URL }}
-          # JMWE_WEBHOOK_URL format:
-          #   https://<your-site>.atlassian.net/rest/scriptrunner/latest/listener/<uuid>
-          # or via JMWE's built-in HTTP listener endpoint.
-          # Store the full URL (including any auth token) as a GitHub secret.
         run: |
           ISSUE_KEY="${{ steps.jira.outputs.issue_key }}"
           LINE_PCT="${{ steps.coverage.outputs.line_pct }}"
