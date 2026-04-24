@@ -34,7 +34,7 @@ jobs:
         # --coverage       → generate coverage report
         # --coverageReporters json-summary → outputs coverage-summary.json
         # || true          → don't fail the action on test failures here;
-        #                    we report the % to Jira and let JMWE gate it
+        #                    we report the % to Jira and let a validator gate it
         run: npx jest --coverage --coverageReporters json-summary || true
 
       # ── 4. Mock Jest coverage-summary.json (remove in real usage) ──────────
@@ -99,11 +99,11 @@ jobs:
           echo "issue_key=$ISSUE_KEY" >> $GITHUB_OUTPUT
           echo "Detected Jira issue: $ISSUE_KEY"
 
-      # ── 7. Send payload to JMWE webhook ────────────────────────────────────
-      - name: POST coverage data to JMWE webhook
+      # ── 7. Send payload to Appfire Powerscripts webhook ────────────────────────────────────
+      - name: POST coverage data to PowerScripts webhook
         id: jmwe
         env:
-          JMWE_WEBHOOK_URL: ${{ secrets.JMWE_WEBHOOK_URL }}
+          JMWE_WEBHOOK_URL: ${{ secrets.APPFIRE_POWERSCRIPTS_WEBHOOK_URL }}
         run: |
           ISSUE_KEY="${{ steps.jira.outputs.issue_key }}"
           LINE_PCT="${{ steps.coverage.outputs.line_pct }}"
@@ -149,17 +149,17 @@ jobs:
           echo "Payload:"
           echo "$PAYLOAD" | jq .
 
-          # POST to JMWE
-          HTTP_STATUS=$(curl -s -o /tmp/jmwe_response.json -w "%{http_code}" \
-            -X POST "$JMWE_WEBHOOK_URL" \
+          # POST to POWERSCRIPTS
+          HTTP_STATUS=$(curl -s -o /tmp/ps_response.json -w "%{http_code}" \
+            -X POST "$POWERSCRIPTS_WEBHOOK_URL" \
             -H "Content-Type: application/json" \
             -d "$PAYLOAD")
 
-          echo "JMWE response (HTTP $HTTP_STATUS):"
-          cat /tmp/jmwe_response.json
+          echo "POWERSCRIPTS response (HTTP $HTTP_STATUS):"
+          cat /tmp/ps_response.json
 
           if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
-            echo "::error::JMWE webhook returned HTTP $HTTP_STATUS"
+            echo "::error::POWERSCRIPTS webhook returned HTTP $HTTP_STATUS"
             exit 1
           fi
 
